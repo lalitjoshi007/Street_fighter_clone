@@ -1,0 +1,72 @@
+import pygame
+import sys
+
+# Initialize Pygame
+pygame.init()
+
+# Set up game window
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Street Fighter!")
+
+# Set up clock
+clock = pygame.time.Clock()
+FPS = 60
+
+# Define colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GRAY = (128, 128, 128)
+
+# Define fonts
+font = pygame.font.Font(None, 36)
+
+# Background images
+backgrounds = [
+    pygame.image.load("assets/images/background/1.jpg").convert(),
+    pygame.image.load("assets/images/background/2.jpg").convert(),
+    pygame.image.load("assets/images/background/3.jpg").convert()
+]
+
+# Background selection menu
+selected_background = 0
+
+def draw_background_menu():
+    screen.fill(BLACK)
+    text = font.render("Select Background:", True, WHITE)
+    screen.blit(text, (50, 50))
+    for i, bg in enumerate(backgrounds):
+        rect = pygame.Rect(50, 100 + i * 100, 200, 80)
+        pygame.draw.rect(screen, GRAY if i != selected_background else WHITE, rect)
+        screen.blit(bg, (60, 110 + i * 100))
+    pygame.display.flip()
+
+# Background selection loop
+background_selection = True
+while background_selection:
+    draw_background_menu()
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = pygame.mouse.get_pos()
+            for i in range(len(backgrounds)):
+                if 50 <= mouse_pos[0] <= 250 and 100 + i * 100 <= mouse_pos[1] <= 180 + i * 100:
+                    selected_background = i
+                    background_selection = False
+                    break
+
+# Main game loop
+running = True
+while running:
+    screen.blit(backgrounds[selected_background], (0, 0))
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    pygame.display.flip()
+    clock.tick(FPS)
+
+pygame.quit()

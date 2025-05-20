@@ -1,0 +1,252 @@
+import pygame
+import sys
+from pygame import mixer
+from fighter import Fighter
+import os
+import random
+
+# Initialize Pygame
+pygame.init()
+# Initialize joystick module
+pygame.joystick.init()
+
+# Initialize the font module
+pygame.font.init()
+
+# AI Fighter class
+class AIFighter:
+    def __init__(self, fighter):
+        self.fighter = fighter
+
+    def make_decision(self, other_fighter):
+        # Simple rule-based decision-making
+        distance = abs(self.fighter.rect.x - other_fighter.rect.x)
+        if distance > 400:
+            self.fighter.move(other_fighter.rect.x)
+        elif distance < 100:
+            self.fighter.attack()
+        else:
+            if random.randint(0, 1) == 0:
+                self.fighter.attack()
+            else:
+                self.fighter.move(other_fighter.rect.x)
+
+# Set up game window
+SCREEN_WIDTH = 1000
+SCREEN_HEIGHT = 600
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Street Fighter!")
+
+# Set up clock
+clock = pygame.time.Clock()
+FPS = 60
+
+# Define colors
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GRAY = (128, 128, 128)
+
+# Set initial volume state
+volume_on = True
+
+# Define fonts
+title_font = pygame.font.Font(None, 80)
+text_font = pygame.font.Font(None, 36)
+
+# Player details entry
+player1_text = ""
+player2_text = ""
+player1_active = True
+player2_active = False
+
+# Load the opening music
+pygame.mixer.init()
+opening_music = pygame.mixer.Sound("assets/audio/stylish-rock-beat-trailer-116346.mp3")
+
+# Load the background selection music
+background_selection_music = pygame.mixer.Sound("assets/audio/stylish-rock-beat-trailer-116346.mp3")
+
+# Load victory image
+victory_img = pygame.image.load("assets/images/icons/victory.png").convert_alpha()
+
+# Function to toggle volume
+def toggle_volume():
+    global volume_on
+    volume_on = not volume_on
+    pygame.mixer.music.set_volume(0.5 if volume_on else 0)
+
+# Function to draw text input
+def draw_text_input():
+    player1_surface = text_font.render(player1_text, True, WHITE)
+    player2_surface = text_font.render(player2_text, True, WHITE)
+
+    screen.blit(player1_surface, (SCREEN_WIDTH // 2 - player1_surface.get_width() // 2, 300))
+    screen.blit(player2_surface, (SCREEN_WIDTH // 2 - player2_surface.get_width() // 2, 400))
+
+    pygame.draw.rect(screen, WHITE, (SCREEN_WIDTH // 2 - 200, 290, 400, 40), 2)
+    pygame.draw.rect(screen, WHITE, (SCREEN_WIDTH // 2 - 200, 390, 400, 40), 2)
+
+# Function to draw text
+def draw_text(text, font, text_col, x, y):
+    img = font.render(text, True, text_col)
+    screen.blit(img, (x, y))
+
+# Function for the settings page
+def settings_page():
+    running_settings = True
+    button_font = pygame.font.Font(None, 36)
+
+    while running_settings:
+        screen.fill((0, 0, 0))
+        draw_text("Settings Page", title_font, WHITE, SCREEN_WIDTH // 2, 100)
+
+        # Draw "Volume On" and "Volume Off" buttons
+        volume_text = "Volume On" if volume_on else "Volume Off"
+        volume_button_text = button_font.render(volume_text, True, WHITE)
+        volume_button_rect = volume_button_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+        pygame.draw.rect(screen, GRAY, volume_button_rect.inflate(20, 10))
+        screen.blit(volume_button_text, volume_button_rect)
+
+        # Draw the "Back" button
+        back_button_text = button_font.render("Back", True, WHITE)
+        back_button_rect = back_button_text.get_rect(topleft=(20, SCREEN_HEIGHT - 50))
+        pygame.draw.rect(screen, GRAY, back_button_rect.inflate(20, 10))
+        screen.blit(back_button_text, back_button_rect)
+
+        # Handle events for the settings page
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running_settings = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                if back_button_rect.collidepoint(mouse_x, mouse_y):
+                    running_settings = False
+                elif volume_button_rect.collidepoint(mouse_x, mouse_y):
+                    toggle_volume()
+
+        pygame.display.update()
+        clock.tick(FPS)
+
+# Function for the start page
+def start_page():
+    running_start = True
+    button_font = pygame.font.Font(None, 36)
+
+    while running_start:
+        screen.fill((0, 0, 0))
+        draw_text("Street Fighter!", title_font, WHITE, SCREEN_WIDTH // 2, 100)
+
+        # Draw the "Start" and "Settings" buttons
+        start_button_text = button_font.render("Start", True, WHITE)
+        start_button_rect = start_button_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+        pygame.draw.rect(screen, GRAY, start_button_rect.inflate(20, 10))
+        screen.blit(start_button_text, start_button_rect)
+
+        settings_button_text = button_font.render("Settings", True, WHITE)
+        settings_button_rect = settings_button_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
+        pygame.draw.rect(screen, GRAY, settings_button_rect.inflate(20, 10))
+        screen.blit(settings_button_text, settings_button_rect)
+
+        # Handle events for the start page
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running_start = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                if start_button_rect.collidepoint(mouse_x, mouse_y):
+                    running_start = False
+                elif settings_button_rect.collidepoint(mouse_x, mouse_y):
+                    settings_page()
+
+        pygame.display.update()
+        clock.tick(FPS)
+
+# Start the opening music
+opening_music.play(-1)
+
+# Show the start page
+start_page()
+
+# Load images
+bg_img = pygame.image.load("assets/images/backgrounds/bg.jpg").convert_alpha()
+bg_img = pygame.transform.scale(bg_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+player_img = pygame.image.load("assets/images/players/player1.png").convert_alpha()
+player_img = pygame.transform.scale(player_img, (200, 200))
+
+# Create player fighters
+player1 = Fighter(screen, player_img, 200, 300, 200, 200, 1)
+player2 = Fighter(screen, player_img, 600, 300, 200, 200, 2)
+
+# Create AI fighters
+ai_fighter1 = AIFighter(player1)
+ai_fighter2 = AIFighter(player2)
+
+# Main game loop
+running = True
+while running:
+    # Check for events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                running = False
+
+    # Update player actions
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_a]:
+        player1.move(-5)
+    if keys[pygame.K_d]:
+        player1.move(5)
+    if keys[pygame.K_s]:
+        player1.crouch()
+    if keys[pygame.K_f]:
+        player1.attack()
+
+    if keys[pygame.K_LEFT]:
+        player2.move(-5)
+    if keys[pygame.K_RIGHT]:
+        player2.move(5)
+    if keys[pygame.K_DOWN]:
+        player2.crouch()
+    if keys[pygame.K_UP]:
+        player2.attack()
+
+    # Update AI actions
+    ai_fighter1.make_decision(player2)
+    ai_fighter2.make_decision(player1)
+
+    # Update fighters
+    player1.update()
+    player2.update()
+
+    # Draw background
+    screen.blit(bg_img, (0, 0))
+
+    # Draw fighters
+    player1.draw()
+    player2.draw()
+
+    # Draw victory image if one of the fighters is defeated
+    if player1.health <= 0:
+        screen.blit(victory_img, (SCREEN_WIDTH // 2 - victory_img.get_width() // 2, 100))
+        draw_text("Player 2 Wins!", title_font, WHITE, SCREEN_WIDTH // 2, 300)
+    elif player2.health <= 0:
+        screen.blit(victory_img, (SCREEN_WIDTH // 2 - victory_img.get_width() // 2, 100))
+        draw_text("Player 1 Wins!", title_font, WHITE, SCREEN_WIDTH // 2, 300)
+
+    pygame.display.update()
+    clock.tick(FPS)
+
+# Quit Pygame
+pygame.quit()
+sys.exit()
