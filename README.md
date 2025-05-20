@@ -52,15 +52,7 @@ Press the following keys on a keyboard to play the game:
 
 
 
-
-## 6. Contributing:
-
-Pull requests are welcome. 
-
-For major changes, please open an issue first to discuss what you would like to change with project owner (Coding With Russ).
-
-
-## 7. Created By:
+## 5. Created By:
 
 Name: Lalit joshi
 
